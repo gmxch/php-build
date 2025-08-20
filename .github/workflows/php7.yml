@@ -16,6 +16,7 @@ jobs:
         with:
           repository: absurd121/php-7.4.33
           path: php-src
+          token: ${{ secrets.GITHUB_TOKEN}}
 
       - name: Install dependencies
         run: |
@@ -65,4 +66,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: php7-custom
-          path: ~/php7-custom.tar.gz
+          path: $HOME/php7-custom.tar.gz
