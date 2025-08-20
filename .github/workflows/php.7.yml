@@ -78,7 +78,7 @@ jobs:
           tar -czf php7-custom.tar.gz php7-custom
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: php7-custom
           path: $HOME/php7-custom.tar.gz
