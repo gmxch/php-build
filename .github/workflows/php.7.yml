@@ -1,4 +1,4 @@
-name: Build PHP 7.4.33 with OpenSSL 1.1
+name: Build PHP 7.4.33 openssl 1.1
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout patch repo
         uses: actions/checkout@v4
 
       - name: Download PHP source
@@ -39,8 +39,7 @@ jobs:
             tar \
             make \
             perl \
-            libtool \
-            zlib1g-dev
+            libtool
 
       - name: Compile OpenSSL 1.1.1
         run: |
@@ -59,19 +58,23 @@ jobs:
 
       - name: Configure & Build PHP
         run: |
+          export CFLAGS="-I$HOME/openssl-1.1/include -Wno-deprecated-declarations"
+          export LDFLAGS="-L$HOME/openssl-1.1/lib"
+          export PKG_CONFIG_PATH="$HOME/openssl-1.1/lib/pkgconfig"
+
           cd php-src
           ./buildconf --force
-          CFLAGS="-Wno-deprecated-declarations" ./configure \
-            --prefix=$HOME/php7-custom \
+          ./configure --prefix=$HOME/php7-custom \
             --with-zlib \
             --enable-mbstring \
             --with-curl \
             --with-openssl=$HOME/openssl-1.1 \
+            --enable-zip \
             --with-readline
           make -j$(nproc)
           make install
 
-      - name: Package build
+      - name: Pack build
         run: |
           cd $HOME
           tar -czf php7-custom.tar.gz php7-custom
