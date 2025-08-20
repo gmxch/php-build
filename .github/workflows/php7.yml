@@ -2,21 +2,33 @@ name: Build PHP 7.4.33 Custom
 
 on:
   workflow_dispatch:
+    inputs:
+      source:
+        description: 'PHP source'
+        required: true
+        default: 'php.net'
+        type: choice
+        options:
+          - php.net
+          - absurd121
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo (patch files)
-        uses: actions/checkout@v3
+      - name: Checkout patch repo
+        uses: actions/checkout@v4
 
-      - name: Checkout clean PHP source
-        uses: actions/checkout@v3
-        with:
-          repository: absurd121/php-7.4.33
-          path: php-src
-          token: ${{ secrets.GITHUB_TOKEN}}
+      - name: Get PHP source
+        run: |
+          if [ "${{ github.event.inputs.source }}" = "php.net" ]; then
+            wget https://www.php.net/distributions/php-7.4.33.tar.gz
+            tar -xzf php-7.4.33.tar.gz
+            mv php-7.4.33 php-src
+          else
+            git clone https://github.com/absurd121/php-7.4.33.git php-src
+          fi
 
       - name: Install dependencies
         run: |
@@ -43,7 +55,7 @@ jobs:
           cp config.m4 php-src/ext/zlib/config.m4
           cp zend_language_scanner.l php-src/Zend/zend_language_scanner.l
 
-      - name: Configure & Build
+      - name: Configure & Build PHP
         run: |
           cd php-src
           ./buildconf --force
@@ -63,7 +75,7 @@ jobs:
           tar -czf php7-custom.tar.gz php7-custom
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: php7-custom
           path: $HOME/php7-custom.tar.gz
