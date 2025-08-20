@@ -1,11 +1,11 @@
-name: Build PHP 7.4.33 Custom
+name: Build PHP 7.4.33 openssl 1.1
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
 
     steps:
       - name: Checkout patch repo
