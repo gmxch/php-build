@@ -1,4 +1,4 @@
-name: Build PHP 7.4.33 openssl 1.1
+name: Build PHP 7.4.33 with OpenSSL 1.1
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout patch repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Download PHP source
@@ -39,7 +39,8 @@ jobs:
             tar \
             make \
             perl \
-            libtool
+            libtool \
+            zlib1g-dev
 
       - name: Compile OpenSSL 1.1.1
         run: |
@@ -53,7 +54,6 @@ jobs:
 
       - name: Apply PHP patch files
         run: |
-          # Copy modified zend/config.m4 dari repo patch
           cp zend_language_scanner.l php-src/Zend/zend_language_scanner.l
           cp config.m4 php-src/ext/zlib/config.m4
 
@@ -61,17 +61,17 @@ jobs:
         run: |
           cd php-src
           ./buildconf --force
-          CFLAGS="-Wno-deprecated-declarations" ./configure --prefix=$HOME/php7-custom \
+          CFLAGS="-Wno-deprecated-declarations" ./configure \
+            --prefix=$HOME/php7-custom \
             --with-zlib \
             --enable-mbstring \
             --with-curl \
             --with-openssl=$HOME/openssl-1.1 \
-            --enable-zip \
             --with-readline
           make -j$(nproc)
           make install
 
-      - name: Pack build
+      - name: Package build
         run: |
           cd $HOME
           tar -czf php7-custom.tar.gz php7-custom
