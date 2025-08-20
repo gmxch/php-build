@@ -2,15 +2,6 @@ name: Build PHP 7.4.33 Custom
 
 on:
   workflow_dispatch:
-    inputs:
-      source:
-        description: 'PHP source'
-        required: true
-        default: 'php.net'
-        type: choice
-        options:
-          - php.net
-          - absurd121
 
 jobs:
   build:
@@ -22,22 +13,17 @@ jobs:
 
       - name: Download PHP source
         run: |
-          if [ "${{ github.event.inputs.source }}" = "php.net" ]; then
-            wget https://www.php.net/distributions/php-7.4.33.tar.gz
-            tar -xzf php-7.4.33.tar.gz
-            mv php-7.4.33 php-src
-          else
-            git clone https://github.com/absurd121/php-7.4.33.git php-src
-          fi
+          wget https://www.php.net/distributions/php-7.4.33.tar.gz
+          tar -xzf php-7.4.33.tar.gz
+          mv php-7.4.33 php-src
 
-      - name: Install dependencies
+      - name: Install dependencies including OpenSSL 1.1
         run: |
-          sudo dpkg --add-architecture arm64
           sudo apt-get update
           sudo apt-get install -y \
             build-essential \
             libxml2-dev \
-            libssl-dev \
+            libssl1.1 libssl-dev=1.1.* \
             libcurl4-openssl-dev \
             libjpeg-dev \
             libpng-dev \
@@ -49,20 +35,18 @@ jobs:
             pkg-config \
             bison \
             re2c \
-            autoconf \
-            gcc-aarch64-linux-gnu \
-            g++-aarch64-linux-gnu
+            autoconf
 
       - name: Replace modified files
         run: |
           cp config.m4 php-src/ext/zlib/config.m4
           cp zend_language_scanner.l php-src/Zend/zend_language_scanner.l
 
-      - name: Configure & Cross-compile PHP
+      - name: Configure & Build
         run: |
           cd php-src
           ./buildconf --force
-          ./configure --host=aarch64-linux-gnu --prefix=$HOME/php7-custom \
+          CFLAGS="-Wno-deprecated-declarations" ./configure --prefix=$HOME/php7-custom \
             --with-zlib \
             --enable-mbstring \
             --with-curl \
