@@ -1,4 +1,4 @@
-name: Build PHP 7.4.33 Custom
+name: Build PHP 7.4.33 openssl 1.1
 
 on:
   workflow_dispatch:
