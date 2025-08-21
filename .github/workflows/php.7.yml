@@ -1,4 +1,4 @@
-name: Build PHP 7.4.33 openssl 1.1
+name: php7.4.33 + OpenSSL 1.0.2u
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout patch repo
+      - name: Checkout repo
         uses: actions/checkout@v4
 
       - name: Download PHP source
@@ -17,7 +17,7 @@ jobs:
           tar -xzf php-7.4.33.tar.gz
           mv php-7.4.33 php-src
 
-      - name: Install build dependencies
+      - name: Install Build Dependencies 
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -41,26 +41,21 @@ jobs:
             perl \
             libtool
 
-      - name: Compile OpenSSL 1.1.1
+      - name: Compile OpenSSL 1.0.2u (Static)
         run: |
-          wget https://www.openssl.org/source/openssl-1.1.1t.tar.gz
-          tar -xzf openssl-1.1.1t.tar.gz
-          cd openssl-1.1.1t
-          ./config --prefix=$HOME/openssl-1.1 --openssldir=$HOME/openssl-1.1 no-shared
+          wget https://www.openssl.org/source/old/1.0.2/openssl-1.0.2u.tar.gz
+          tar -xzf openssl-1.0.2u.tar.gz
+          cd openssl-1.0.2u
+          ./config --prefix=$HOME/openssl-1.0.2 --openssldir=$HOME/openssl-1.0.2 no-shared
           make -j$(nproc)
           make install
           cd ..
 
-      - name: Apply PHP patch files
-        run: |
-          cp zend_language_scanner.l php-src/Zend/zend_language_scanner.l
-          cp config.m4 php-src/ext/zlib/config.m4
-
       - name: Configure & Build PHP
         run: |
-          export CFLAGS="-I$HOME/openssl-1.1/include -Wno-deprecated-declarations"
-          export LDFLAGS="-L$HOME/openssl-1.1/lib"
-          export PKG_CONFIG_PATH="$HOME/openssl-1.1/lib/pkgconfig"
+          export CFLAGS="-I$HOME/openssl-1.0.2/include -Wno-deprecated-declarations"
+          export LDFLAGS="-L$HOME/openssl-1.0.2/lib -static"
+          export PKG_CONFIG_PATH="$HOME/openssl-1.0.2/lib/pkgconfig"
 
           cd php-src
           ./buildconf --force
@@ -68,9 +63,10 @@ jobs:
             --with-zlib \
             --enable-mbstring \
             --with-curl \
-            --with-openssl=$HOME/openssl-1.1 \
+            --with-openssl=$HOME/openssl-1.0.2 \
             --enable-zip \
-            --with-readline
+            --with-readline \
+            --disable-shared
           make -j$(nproc)
           make install
 
