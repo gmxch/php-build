@@ -58,6 +58,7 @@ jobs:
       - name: Configure & Build PHP
         run: |
           cd php-src
+          chmod +x buildconf
           ./buildconf --force
           ./configure --prefix=$HOME/php8-custom \
             --with-zlib \
