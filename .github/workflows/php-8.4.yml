@@ -50,12 +50,13 @@ jobs:
             make \
             perl \
             libtool \
+            zlib1g-dev \
             gcc-aarch64-linux-gnu \
             g++-aarch64-linux-gnu
 
       - name: Apply PHP patch files
         run: |
-          # jika ada patch
+          # copy patch kalau ada
           cp zend_language_scanner.l php-src/Zend/zend_language_scanner.l || true
 
       - name: Configure & Build PHP
@@ -63,9 +64,12 @@ jobs:
           cd php-src
           chmod +x buildconf
           ./buildconf --force
+          
           if [ "${{ github.event.inputs.arch }}" = "arm64" ]; then
             export CC=aarch64-linux-gnu-gcc
             export CXX=aarch64-linux-gnu-g++
+            export AR=aarch64-linux-gnu-ar
+            export RANLIB=aarch64-linux-gnu-ranlib
             ./configure --host=aarch64-linux-gnu --prefix=$HOME/php8-custom \
               --with-zlib \
               --enable-mbstring \
@@ -86,15 +90,17 @@ jobs:
               --enable-fpm \
               --with-readline
           fi
+
+          make clean || true
           make -j$(nproc)
           make install
 
       - name: Pack build
         run: |
-          tar -czf $GITHUB_WORKSPACE/php8-custom-${{ github.event.inputs.arch }}.tar.gz -C $HOME php8-custom
+          tar -czf $GITHUB_WORKSPACE/php8.4.11-${{ github.event.inputs.arch }}.tar.gz -C $HOME php8-custom
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: php8.4.11-custom-${{ github.event.inputs.arch }}
-          path: php8-custom-${{ github.event.inputs.arch }}.tar.gz
+          path: php8.4.11-${{ github.event.inputs.arch }}.tar.gz
