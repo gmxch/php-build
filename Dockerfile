@@ -44,7 +44,7 @@ RUN wget https://www.php.net/distributions/php-8.4.11.tar.gz && \
 # Copy patch files (pastikan patch ada di folder build-context)
 COPY zend_language_scanner.l /build/php-src/Zend/zend_language_scanner.l
 
-# Configure & build PHP for ARM64
+# Build PHP for ARM64
 WORKDIR /build/php-src
 RUN chmod +x buildconf && ./buildconf --force && \
     export CC=aarch64-linux-gnu-gcc && \
@@ -59,6 +59,12 @@ RUN chmod +x buildconf && ./buildconf --force && \
         --enable-fpm \
         --with-readline && \
     make -j$(nproc) && make install
+
+# Strip binaries to reduce size
+RUN find $PHP_PREFIX -type f -executable -exec strip --strip-unneeded {} \; || true
+
+# Optional: remove build files to save space
+RUN rm -rf /build/php-src /build/php-8.4.11.tar.gz
 
 # Set PATH
 ENV PATH="$PHP_PREFIX/bin:$PATH"
