@@ -1,11 +1,30 @@
-name: Test Actions
+# .github/workflows/check-zend-l.yml
+name: Check Zend Language Scanner (PHP latest)
 
 on:
   workflow_dispatch:
 
 jobs:
-  test:
-    runs-on: ubuntu-20.04
+  zend-check:
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Hello
-        run: echo "Actions running!"
+      - name: Download latest PHP source from php.net
+        run: |
+          wget https://www.php.net/distributions/php-8.4.11.tar.gz
+          tar -xzf php-8.4.11.tar.gz
+          mv php-8.4.11 php-src
+
+      - name: Verify zend_language_scanner.l file exists
+        run: |
+          if [ -f php-src/Zend/zend_language_scanner.l ]; then
+            echo "Found zend_language_scanner.l in Zend"
+          else
+            echo "⚠ File zend_language_scanner.l NOT found!" && exit 1
+          fi
+
+      - name: Upload zend_language_scanner.l
+        uses: actions/upload-artifact@v4
+        with:
+          name: zend-language-scanner-php8.4.11
+          path: php-src/Zend/zend_language_scanner.l
