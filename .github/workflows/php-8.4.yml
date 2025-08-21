@@ -26,37 +26,67 @@ jobs:
           tar -xzf php-8.4.11.tar.gz
           mv php-8.4.11 php-src
 
+      - name: Enable multi-arch (if needed)
+        if: ${{ github.event.inputs.arch == 'arm64' }}
+        run: |
+          sudo dpkg --add-architecture arm64
+          sudo apt-get update
+
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential \
-            libxml2-dev \
-            libssl-dev \
-            libcurl4-openssl-dev \
-            libjpeg-dev \
-            libpng-dev \
-            libwebp-dev \
-            libxpm-dev \
-            libzip-dev \
-            libonig-dev \
-            libreadline-dev \
-            pkg-config \
-            bison \
-            re2c \
-            autoconf \
-            wget \
-            tar \
-            make \
-            perl \
-            libtool \
-            zlib1g-dev \
-            gcc-aarch64-linux-gnu \
-            g++-aarch64-linux-gnu
+          if [ "${{ github.event.inputs.arch }}" = "arm64" ]; then
+            sudo apt-get install -y \
+              build-essential \
+              pkg-config \
+              bison \
+              re2c \
+              autoconf \
+              wget \
+              tar \
+              make \
+              perl \
+              libtool \
+              gcc-aarch64-linux-gnu \
+              g++-aarch64-linux-gnu \
+              libxml2-dev:arm64 \
+              libssl-dev:arm64 \
+              libcurl4-openssl-dev:arm64 \
+              libjpeg-dev:arm64 \
+              libpng-dev:arm64 \
+              libwebp-dev:arm64 \
+              libxpm-dev:arm64 \
+              libzip-dev:arm64 \
+              libonig-dev:arm64 \
+              libreadline-dev:arm64 \
+              zlib1g-dev:arm64
+          else
+            sudo apt-get install -y \
+              build-essential \
+              libxml2-dev \
+              libssl-dev \
+              libcurl4-openssl-dev \
+              libjpeg-dev \
+              libpng-dev \
+              libwebp-dev \
+              libxpm-dev \
+              libzip-dev \
+              libonig-dev \
+              libreadline-dev \
+              pkg-config \
+              bison \
+              re2c \
+              autoconf \
+              wget \
+              tar \
+              make \
+              perl \
+              libtool \
+              zlib1g-dev
+          fi
 
       - name: Apply PHP patch files
         run: |
-          # copy patch kalau ada
+          # jika ada patch lokal
           cp zend_language_scanner.l php-src/Zend/zend_language_scanner.l || true
 
       - name: Configure & Build PHP
@@ -64,12 +94,9 @@ jobs:
           cd php-src
           chmod +x buildconf
           ./buildconf --force
-          
           if [ "${{ github.event.inputs.arch }}" = "arm64" ]; then
             export CC=aarch64-linux-gnu-gcc
             export CXX=aarch64-linux-gnu-g++
-            export AR=aarch64-linux-gnu-ar
-            export RANLIB=aarch64-linux-gnu-ranlib
             ./configure --host=aarch64-linux-gnu --prefix=$HOME/php8-custom \
               --with-zlib \
               --enable-mbstring \
@@ -90,17 +117,16 @@ jobs:
               --enable-fpm \
               --with-readline
           fi
-
           make clean || true
           make -j$(nproc)
           make install
 
       - name: Pack build
         run: |
-          tar -czf $GITHUB_WORKSPACE/php8.4.11-${{ github.event.inputs.arch }}.tar.gz -C $HOME php8-custom
+          tar -czf $GITHUB_WORKSPACE/php8-custom-${{ github.event.inputs.arch }}.tar.gz -C $HOME php8-custom
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: php8.4.11-custom-${{ github.event.inputs.arch }}
-          path: php8.4.11-${{ github.event.inputs.arch }}.tar.gz
+          path: php8-custom-${{ github.event.inputs.arch }}.tar.gz
