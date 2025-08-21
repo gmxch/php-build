@@ -66,6 +66,8 @@ jobs:
             --with-curl \
             --with-openssl \
             --enable-zip \
+            --enable-cli \
+            --enable-fpm \
             --with-readline
           make -j$(nproc)
           make install
