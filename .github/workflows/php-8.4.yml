@@ -39,7 +39,6 @@ jobs:
 
       - name: Replace modified files
         run: |
-          cp config.m4 php-src/ext/zlib/config.m4
           cp zend_language_scanner.l php-src/Zend/zend_language_scanner.l
 
       - name: Configure & Build PHP
