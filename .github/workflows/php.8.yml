@@ -27,7 +27,7 @@ jobs:
             tar -xzf php-8.0.30.tar.gz
             mv php-8.0.30 php-src
           else
-            git clone --branch php-8.3.12 https://github.com/absurd121/php-8.0.30.git php-src
+            git clone https://github.com/absurd121/php-8.0.30.git php-src
           fi
 
       - name: Install dependencies
