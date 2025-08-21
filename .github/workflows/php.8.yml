@@ -1,4 +1,4 @@
-name: Build PHP 8.3.12 Custom
+name: Build PHP 8.0.30 Custom
 
 on:
   workflow_dispatch:
@@ -23,11 +23,11 @@ jobs:
       - name: Get PHP source
         run: |
           if [ "${{ github.event.inputs.source }}" = "php.net" ]; then
-            wget https://www.php.net/distributions/php-8.3.12.tar.gz
-            tar -xzf php-8.3.12.tar.gz
-            mv php-8.3.12 php-src
+            wget https://www.php.net/distributions/php-8.0.30.tar.gz
+            tar -xzf php-8.0.30.tar.gz
+            mv php-8.0.30 php-src
           else
-            git clone --branch php-8.3.12 https://github.com/absurd121/php-8.3.12.git php-src
+            git clone --branch php-8.3.12 https://github.com/absurd121/php-8.0.30.git php-src
           fi
 
       - name: Install dependencies
