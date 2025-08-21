@@ -60,11 +60,11 @@ jobs:
 
       - name: Pack build
         run: |
-          cd $HOME
-          tar -czf php8-custom.tar.gz php8-custom
+          tar -czf php8-custom.tar.gz -C $HOME php8-custom
+          mv php8-custom.tar.gz $GITHUB_WORKSPACE/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: php8.4.11-custom
-          path: $HOME/php8-custom.tar.gz
+          path: php8-custom.tar.gz
