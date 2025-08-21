@@ -8,6 +8,7 @@ ENV PHP_PREFIX=/usr/local/php8
 # Install build dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
+    libsqlite3-dev \
     libxml2-dev \
     libssl-dev \
     libcurl4-openssl-dev \
