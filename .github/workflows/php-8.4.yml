@@ -2,16 +2,25 @@ name: Build PHP 8.4.11 Custom
 
 on:
   workflow_dispatch:
+    inputs:
+      arch:
+        description: 'Target architecture'
+        required: true
+        default: 'x86_64'
+        type: choice
+        options:
+          - x86_64
+          - arm64
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout patch repo
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Get PHP source (8.4.11)
+      - name: Get PHP source
         run: |
           wget https://www.php.net/distributions/php-8.4.11.tar.gz
           tar -xzf php-8.4.11.tar.gz
@@ -35,35 +44,57 @@ jobs:
             pkg-config \
             bison \
             re2c \
-            autoconf
+            autoconf \
+            wget \
+            tar \
+            make \
+            perl \
+            libtool \
+            gcc-aarch64-linux-gnu \
+            g++-aarch64-linux-gnu
 
-      - name: Replace modified files
+      - name: Apply PHP patch files
         run: |
-          cp zend_language_scanner.l php-src/Zend/zend_language_scanner.l
+          # jika ada patch
+          cp zend_language_scanner.l php-src/Zend/zend_language_scanner.l || true
 
       - name: Configure & Build PHP
         run: |
           cd php-src
           chmod +x buildconf
           ./buildconf --force
-          ./configure --prefix=$HOME/php8-custom \
-            --with-zlib \
-            --enable-mbstring \
-            --with-curl \
-            --with-openssl \
-            --enable-zip \
-            --enable-cli \
-            --enable-fpm \
-            --with-readline
+          if [ "${{ github.event.inputs.arch }}" = "arm64" ]; then
+            export CC=aarch64-linux-gnu-gcc
+            export CXX=aarch64-linux-gnu-g++
+            ./configure --host=aarch64-linux-gnu --prefix=$HOME/php8-custom \
+              --with-zlib \
+              --enable-mbstring \
+              --with-curl \
+              --with-openssl \
+              --enable-zip \
+              --enable-cli \
+              --enable-fpm \
+              --with-readline
+          else
+            ./configure --prefix=$HOME/php8-custom \
+              --with-zlib \
+              --enable-mbstring \
+              --with-curl \
+              --with-openssl \
+              --enable-zip \
+              --enable-cli \
+              --enable-fpm \
+              --with-readline
+          fi
           make -j$(nproc)
           make install
 
       - name: Pack build
         run: |
-          tar -czf $GITHUB_WORKSPACE/php8-custom.tar.gz -C $HOME php8-custom
+          tar -czf $GITHUB_WORKSPACE/php8-custom-${{ github.event.inputs.arch }}.tar.gz -C $HOME php8-custom
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: php8.4.11-custom
-          path: php8-custom.tar.gz
+          name: php8.4.11-custom-${{ github.event.inputs.arch }}
+          path: php8-custom-${{ github.event.inputs.arch }}.tar.gz
