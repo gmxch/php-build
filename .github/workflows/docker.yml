@@ -1,4 +1,4 @@
-name: Build PHP 8.4.11 ARM64 tarball
+name: Build PHP 8.4.11 ARM64 Docker
 
 on:
   workflow_dispatch:
@@ -17,16 +17,20 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build ARM64 PHP tarball
+      - name: Build ARM64 PHP Docker image
         run: |
           docker buildx build \
             --platform linux/arm64 \
-            --target export \
-            --output type=tar,dest=php8-arm64.tar \
+            -t php8-arm64-runtime \
+            --load \
             .
+
+      - name: Save Docker image as tar
+        run: |
+          docker save php8-arm64-runtime -o php8-arm64-runtime.tar
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: php8-arm64-tar
-          path: php8-arm64.tar
+          name: php8-arm64-runtime-docker
+          path: php8-arm64-runtime.tar
