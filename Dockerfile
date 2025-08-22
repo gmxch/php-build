@@ -1,11 +1,12 @@
-# Base image
-FROM ubuntu:22.04
+# ==========================
+# Stage 1: Build PHP
+# ==========================
+FROM ubuntu:22.04 AS builder
 
-# Environment
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PHP_PREFIX=/usr/local/php8
 
-# Install build dependencies
+# Install build deps
 RUN apt-get update && apt-get install -y \
     build-essential \
     libsqlite3-dev \
@@ -33,41 +34,67 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# Set working dir
 WORKDIR /build
 
-# Download PHP source
+# Ambil source PHP
 RUN wget https://www.php.net/distributions/php-8.4.11.tar.gz && \
     tar -xzf php-8.4.11.tar.gz && \
     mv php-8.4.11 php-src
 
-# Copy patch files (pastikan patch ada di folder build-context)
+# Patch kalau ada
 COPY zend_language_scanner.l /build/php-src/Zend/zend_language_scanner.l
 
-# Build PHP for ARM64
 WORKDIR /build/php-src
 RUN chmod +x buildconf && ./buildconf --force && \
     export CC=aarch64-linux-gnu-gcc && \
     export CXX=aarch64-linux-gnu-g++ && \
     ./configure --host=aarch64-linux-gnu --prefix=$PHP_PREFIX \
-        --with-zlib \
-        --enable-mbstring \
-        --with-curl \
-        --with-openssl \
-        --enable-zip \
         --enable-cli \
         --enable-fpm \
-        --with-readline && \
+        --enable-mbstring \
+        --with-openssl \
+        --with-curl \
+        --enable-zip \
+        --with-readline \
+        --with-zlib && \
     make -j$(nproc) && make install
 
-# Strip binaries to reduce size
+# Strip binary biar kecil
 RUN find $PHP_PREFIX -type f -executable -exec strip --strip-unneeded {} \; || true
 
-# Optional: remove build files to save space
-RUN rm -rf /build/php-src /build/php-8.4.11.tar.gz
+# Buang file nggak perlu (header, static lib, man, etc)
+RUN rm -rf $PHP_PREFIX/include \
+           $PHP_PREFIX/lib/*.a \
+           $PHP_PREFIX/lib/*.la \
+           $PHP_PREFIX/php/man \
+           $PHP_PREFIX/php/docs
 
-# Set PATH
+# ==========================
+# Stage 2: Final runtime
+# ==========================
+FROM ubuntu:22.04
+
+ENV PHP_PREFIX=/usr/local/php8
 ENV PATH="$PHP_PREFIX/bin:$PATH"
 
-# Verify PHP
+# Install only runtime deps
+RUN apt-get update && apt-get install -y \
+    libsqlite3-0 \
+    libxml2 \
+    libssl3 \
+    libcurl4 \
+    libjpeg-turbo8 \
+    libpng16-16 \
+    libwebp7 \
+    libxpm4 \
+    libzip4 \
+    libonig5 \
+    libreadline8 \
+    zlib1g \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy hasil build dari stage 1
+COPY --from=builder $PHP_PREFIX $PHP_PREFIX
+
+# Tes PHP jalan
 RUN php -v
