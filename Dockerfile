@@ -44,6 +44,7 @@ RUN wget https://www.php.net/distributions/php-8.4.11.tar.gz && \
 # Patch kalau ada
 COPY zend_language_scanner.l /build/php-src/Zend/zend_language_scanner.l
 
+# Build PHP
 WORKDIR /build/php-src
 RUN chmod +x buildconf && ./buildconf --force && \
     export CC=aarch64-linux-gnu-gcc && \
@@ -59,10 +60,10 @@ RUN chmod +x buildconf && ./buildconf --force && \
         --with-zlib && \
     make -j$(nproc) && make install
 
-# Strip binary biar kecil
+# Strip binary supaya kecil
 RUN find $PHP_PREFIX -type f -executable -exec strip --strip-unneeded {} \; || true
 
-# Buang file nggak perlu (header, static lib, man, etc)
+# Hapus file header, static lib, man, docs
 RUN rm -rf $PHP_PREFIX/include \
            $PHP_PREFIX/lib/*.a \
            $PHP_PREFIX/lib/*.la \
@@ -70,31 +71,7 @@ RUN rm -rf $PHP_PREFIX/include \
            $PHP_PREFIX/php/docs
 
 # ==========================
-# Stage 2: Final runtime
+# Stage 2: Export PHP murni
 # ==========================
-FROM ubuntu:22.04
-
-ENV PHP_PREFIX=/usr/local/php8
-ENV PATH="$PHP_PREFIX/bin:$PATH"
-
-# Install only runtime deps
-RUN apt-get update && apt-get install -y \
-    libsqlite3-0 \
-    libxml2 \
-    libssl3 \
-    libcurl4 \
-    libjpeg-turbo8 \
-    libpng16-16 \
-    libwebp7 \
-    libxpm4 \
-    libzip4 \
-    libonig5 \
-    libreadline8 \
-    zlib1g \
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy hasil build dari stage 1
-COPY --from=builder $PHP_PREFIX $PHP_PREFIX
-
-# Tes PHP jalan
-RUN php -v
+FROM scratch AS export
+COPY --from=builder /usr/local/php8/ /php/
