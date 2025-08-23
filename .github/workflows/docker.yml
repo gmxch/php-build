@@ -1,36 +1,35 @@
-name: Build PHP 8.4.11 ARM64 Docker
+name: Build PHP 8.4.11 ARM64 Tarball
 
 on:
   workflow_dispatch:
 
 jobs:
-  build-arm:
+  build-arm64:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up QEMU for ARM
+      - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
-      - name: Set up Docker Buildx
+      - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build ARM64 PHP Docker image
+      - name: Build and export PHP ARM64
         run: |
           docker buildx build \
             --platform linux/arm64 \
-            -t php8-arm64-runtime \
-            --load \
-            .
+            -o type=tar,dest=php8-arm64.tar .
 
-      - name: Save Docker image as tar
+      - name: Compress tarball
         run: |
-          docker save php8-arm64-runtime -o php8-arm64-runtime.tar
+          mkdir -p out
+          tar -czf out/php8-arm64.tar.gz -C / ./php8-arm64.tar
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: php8-arm64-runtime-docker
-          path: php8-arm64-runtime.tar
+          name: php8-arm64-tarball
+          path: out/php8-arm64.tar.gz
