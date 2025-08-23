@@ -11,9 +11,9 @@ jobs:
     steps:
       - name: Download latest PHP source from php.net
         run: |
-          wget https://www.php.net/distributions/php-8.4.11.tar.gz
-          tar -xzf php-8.4.11.tar.gz
-          mv php-8.4.11 php-src
+          wget https://www.php.net/distributions/php-8.4.2.tar.gz
+          tar -xzf php-8.4.2.tar.gz
+          mv php-8.4.2 php-src
 
       - name: Verify zend_language_scanner.l file exists
         run: |
