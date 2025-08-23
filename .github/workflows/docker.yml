@@ -21,15 +21,11 @@ jobs:
         run: |
           docker buildx build \
             --platform linux/arm64 \
+            --target export \
             -o type=tar,dest=php8-arm64.tar .
-
-      - name: Compress tarball
-        run: |
-          mkdir -p out
-          tar -czf out/php8-arm64.tar.gz -C / ./php8-arm64.tar
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: php8-arm64-tarball
-          path: out/php8-arm64.tar.gz
+          path: php8-arm64.tar
