@@ -1,11 +1,10 @@
-
-# Stage 1: build
+# Stage 1: Build PHP
 FROM ubuntu:22.04 AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PHP_PREFIX=/usr/local/php8
 
-# Install build dependencies
+# Install build deps
 RUN apt-get update && apt-get install -y \
     build-essential \
     libsqlite3-dev \
@@ -35,14 +34,15 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /build
 
-# Preparing Source
+# Download PHP source
 RUN wget https://www.php.net/distributions/php-8.4.11.tar.gz && \
     tar -xzf php-8.4.11.tar.gz && \
     mv php-8.4.11 php-src
 
-# Copy patch jika ada
+# Patch jika ada
 COPY zend_language_scanner.l /build/php-src/Zend/zend_language_scanner.l
 
+# Build
 WORKDIR /build/php-src
 RUN chmod +x buildconf && ./buildconf --force && \
     export CC=aarch64-linux-gnu-gcc && \
@@ -58,37 +58,16 @@ RUN chmod +x buildconf && ./buildconf --force && \
         --with-zlib && \
     make -j$(nproc) && make install
 
-# Strip binary
+# Strip binary supaya kecil
 RUN find $PHP_PREFIX -type f -executable -exec strip --strip-unneeded {} \; || true
 
-# file header, static lib, man, docs
+# Hapus file tidak perlu
 RUN rm -rf $PHP_PREFIX/include \
            $PHP_PREFIX/lib/*.a \
            $PHP_PREFIX/lib/*.la \
            $PHP_PREFIX/php/man \
            $PHP_PREFIX/php/docs
 
-# Stage 2: Final runtime
-FROM ubuntu:22.04
-
-ENV PHP_PREFIX=/usr/local/php8
-ENV PATH="$PHP_PREFIX/bin:$PATH"
-
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
-    libsqlite3-0 \
-    libxml2 \
-    libssl3 \
-    libcurl4 \
-    libjpeg-turbo8 \
-    libpng16-16 \
-    libwebp7 \
-    libxpm4 \
-    libzip4 \
-    libonig5 \
-    libreadline8 \
-    zlib1g \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY --from=builder $PHP_PREFIX $PHP_PREFIX
-RUN php -v
+# Stage 2: Export PHP tarball
+FROM scratch AS export
+COPY --from=builder /usr/local/php8/ /php/
