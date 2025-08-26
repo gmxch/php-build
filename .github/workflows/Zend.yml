@@ -1,19 +1,24 @@
-# .github/workflows/check-zend-l.yml
-name: Check Zend Language Scanner (PHP latest)
+name: Check Zend Language Scanner
 
 on:
   workflow_dispatch:
+    inputs:
+      php-version:
+        description: 'PHP version to check'
+        required: true
+        default: '8.4.2'
 
 jobs:
   zend-check:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download latest PHP source from php.net
+      - name: Download PHP source
         run: |
-          wget https://www.php.net/distributions/php-8.4.2.tar.gz
-          tar -xzf php-8.4.2.tar.gz
-          mv php-8.4.2 php-src
+          echo "Using PHP version: ${{ github.event.inputs.php-version }}"
+          wget https://www.php.net/distributions/php-${{ github.event.inputs.php-version }}.tar.gz
+          tar -xzf php-${{ github.event.inputs.php-version }}.tar.gz
+          mv php-${{ github.event.inputs.php-version }} php-src
 
       - name: Verify zend_language_scanner.l file exists
         run: |
@@ -26,5 +31,5 @@ jobs:
       - name: Upload zend_language_scanner.l
         uses: actions/upload-artifact@v4
         with:
-          name: zend-language-scanner-php8.4.11
+          name: zend-language-scanner-php${{ github.event.inputs.php-version }}
           path: php-src/Zend/zend_language_scanner.l
