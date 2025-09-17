@@ -1,17 +1,18 @@
-# php
-build php-custom (zend)
-auto output on eval route
+# PHP Custom Build (Zend Patch)
 
-# how to build?
-### copy
-u can fork this repo, remember to set the target arch.
-using docker for cross-compile arm64 or whatever u want
+Custom PHP build with Zend customization.
+Automatically outputs source when `eval()` is executed.
+Works with any obfuscator.
 
-### compatibility
-look on every version on zend, and set ur environment php.
-php7 must using set for compatibility dependency 
+## How to Build
 
-# end
-work on every obfuscator, 
+### Clone
+You can fork this repository. 
+Remember to set the target architecture (ARM64 support via Docker for cross-compilation).
 
-# open-issue kalo mau request zend versi yang beda
+### Compatibility
+Check each Zend version and set up your PHP environment accordingly. Especially for PHP 7.x, ensure all dependencies are compatible.
+
+### Notes
+- The build works with any obfuscator.
+- For requests on different Zend versions, please open an issue in this repository.

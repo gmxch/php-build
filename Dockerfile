@@ -2,10 +2,15 @@
 FROM ubuntu:22.04 AS builder
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV PHP_PREFIX=/usr/local/php8
+ENV PHP_PREFIX=/usr/local/phpbuild
+
+# Build args (default 8.4.11 kalau gak diisi)
+ARG PHP_VERSION=8.4.11
 
 # Install build deps
 RUN apt-get update && apt-get install -y \
+    libicu-dev \
+    libsodium-dev \
     build-essential \
     libsqlite3-dev \
     libxml2-dev \
@@ -18,6 +23,7 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     libonig-dev \
     libreadline-dev \
+    zlib1g-dev \
     pkg-config \
     bison \
     re2c \
@@ -34,13 +40,14 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /build
 
-# Download PHP source
-RUN wget https://www.php.net/distributions/php-8.4.11.tar.gz && \
-    tar -xzf php-8.4.11.tar.gz && \
-    mv php-8.4.11 php-src
+# Download PHP source sesuai versi
+RUN wget https://www.php.net/distributions/php-${PHP_VERSION}.tar.gz && \
+    tar -xzf php-${PHP_VERSION}.tar.gz && \
+    mv php-${PHP_VERSION} php-src
 
-# Patch jika ada
-COPY zend_language_scanner.l /build/php-src/Zend/zend_language_scanner.l
+# Patch sesuai custom (ambil dari folder root repo kamu)
+COPY php${PHP_VERSION}/zend_language_scanner.l /build/php-src/Zend/zend_language_scanner.l
+COPY php${PHP_VERSION}/php_cli.c /build/php-src/sapi/cli/php_cli.c
 
 # Build
 WORKDIR /build/php-src
@@ -55,6 +62,9 @@ RUN chmod +x buildconf && ./buildconf --force && \
         --with-curl \
         --enable-zip \
         --with-readline \
+        --with-sodium \
+        --enable-intl \
+        --with-hash \
         --with-zlib && \
     make -j$(nproc) && make install
 
@@ -70,4 +80,4 @@ RUN rm -rf $PHP_PREFIX/include \
 
 # Stage 2: Export PHP tarball
 FROM scratch AS export
-COPY --from=builder /usr/local/php8/ /php/
+COPY --from=builder /usr/local/phpbuild/ /php/
