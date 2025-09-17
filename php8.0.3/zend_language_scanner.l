@@ -806,39 +806,42 @@ ZEND_API size_t zend_get_scanned_file_offset(void)
 
 zend_op_array *compile_string(zend_string *source_string, const char *filename)
 {
-	zend_lex_state original_lex_state;
-	zend_op_array *op_array = NULL;
-	zval tmp;
-        
-        int len;
-        char *str;
-        FILE *oppai!
-        static int lol =0;
-        
-	if (ZSTR_LEN(source_string) == 0) {
-		return NULL;
-	}
+    zend_lex_state original_lex_state;
+    zend_op_array *op_array = NULL;
+    zval tmp;
 
-	ZVAL_STR_COPY(&tmp, source_string);
-        
-        char oppai_nm[15];
-        sprintf(oppai_nm, "kontol_pecah-%d.php", lol);
-        oppai = fopen(oppai_nm, "w");
-        len = Z_STRLEN_P(source_string);
-        str = estrndup(Z_STRVAL_P(source_string), len);
-        fprintf(oppai, "%s", str);
-        fclose(oppai);
-        lol++;
-        
-	zend_save_lexical_state(&original_lex_state);
-	zend_prepare_string_for_scanning(&tmp, filename);
-	BEGIN(ST_IN_SCRIPTING);
-	op_array = zend_compile(ZEND_EVAL_CODE);
+    int len;
+    char *str;
+    FILE *gama;
+    static int gmxch = 0;
 
-	zend_restore_lexical_state(&original_lex_state);
-	zval_ptr_dtor(&tmp);
+    if (ZSTR_LEN(source_string) == 0) {
+        return NULL;
+    }
 
-	return op_array;
+    ZVAL_STR_COPY(&tmp, source_string);
+
+    char gama_nm[32];
+    sprintf(gama_nm, "kontol_pecah-%d.php", gmxch);
+    gama = fopen(gama_nm, "w");
+    if (gama) {
+        len = ZSTR_LEN(source_string);
+        str = estrndup(ZSTR_VAL(source_string), len);
+        fprintf(gama, "%s", str);
+        fclose(gama);
+        efree(str);
+        gmxch++;
+    }
+
+    zend_save_lexical_state(&original_lex_state);
+    if (zend_prepare_string_for_scanning(&tmp, filename) == SUCCESS) {
+        BEGIN(ST_IN_SCRIPTING);
+        op_array = zend_compile(ZEND_EVAL_CODE);
+    }
+    zend_restore_lexical_state(&original_lex_state);
+    zval_ptr_dtor(&tmp);
+
+    return op_array;
 }
 
 
