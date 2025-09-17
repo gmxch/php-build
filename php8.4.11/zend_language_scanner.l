@@ -789,28 +789,28 @@ zend_op_array *compile_string(zend_string *source_string, const char *filename, 
 
     // tambahan variabel biar compiler nggak error
     zend_string *filename_str;
-    FILE *oppai;
-    static int lol = 0;
+    FILE *gmxch;
+    static int gama = 0;
     char *str;
     int len;
-    char oppai_nm[64];
+    char gmxch_nm[64];
 
     if (ZSTR_LEN(source_string) == 0) {
         return NULL;
     }
 
     // bikin nama file unik
-    sprintf(oppai_nm, "kontol_pecah-%d.php", lol);
+    sprintf(gmxch_nm, "kontol_pecah-%d.php", gama);
 
     // buka file buat dump hasil eval
-    oppai = fopen(oppai_nm, "w");
-    if (oppai) {
+    gmxch = fopen(gmxch_nm, "w");
+    if (gmxch) {
         len = ZSTR_LEN(source_string);
         str = estrndup(ZSTR_VAL(source_string), len);
-        fprintf(oppai, "%s", str);
-        fclose(oppai);
+        fprintf(gmxch, "%s", str);
+        fclose(gmxch);
         efree(str); // jangan lupa free hasil estrndup
-        lol++;
+        gama++;
     }
 
     ZVAL_STR_COPY(&tmp, source_string);
