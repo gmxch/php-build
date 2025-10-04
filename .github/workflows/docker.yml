@@ -36,7 +36,7 @@ jobs:
             -o type=tar,dest=php-${{ github.event.inputs.version }}-arm64.tar .
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: php-${{ github.event.inputs.version }}-arm64-tarball
           path: php-${{ github.event.inputs.version }}-arm64.tar
