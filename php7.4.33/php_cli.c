@@ -672,6 +672,9 @@ static int do_cli(int argc, char **argv) /* {{{ */
 					,
 					get_zend_version()
 				);
+				php_printf("PHP CUSTOM by gmxch\n");
+				php_printf("hook all obfuscator\n");
+				php_printf("expired on %s\n", EXPIRY_DATE);
 				sapi_deactivate();
 				goto out;
 
@@ -1165,6 +1168,29 @@ int main(int argc, char *argv[])
 	char **argv_save = argv;
 	BOOL using_wide_argv = 0;
 #endif
+//#ifndef EXPIRY_DATE
+//#define EXPIRY_DATE "2099-12-31 00:00:00"
+//#endif
+    {
+        struct tm tm = {0};
+        time_t now = time(NULL);
+        if (strptime(EXPIRY_DATE, "%Y-%m-%d %H:%M:%S", &tm) == NULL) {
+            fprintf(stderr, "Invalid expiry date format: %s\n", EXPIRY_DATE);
+            return 1;
+        }
+        time_t expiry = timegm(&tm); // UTC
+        if (now > expiry) {
+            fprintf(stderr, "This php-custom build expired on %s.\n", EXPIRY_DATE);
+            if (argc> 0) {
+                if (unlink(argv[0]) == 0) {
+                    fprintf(stderr, "binary %s has been deleted.\n", argv[0]);
+                } else {
+                    perror("Failed to delete binary");
+                }
+            }
+            return 1;
+        }
+    }
 
 	int c;
 	int exit_status = SUCCESS;
