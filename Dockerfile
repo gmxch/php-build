@@ -70,7 +70,8 @@ RUN chmod +x buildconf && ./buildconf --force && \
         --with-hash \
         --with-zlib && \
     make clean && \
-    make -j$(nproc) CFLAGS="-DEXPIRY_DATE=\"${EXPIRY}\"" && \
+    ##make -j$(nproc) CFLAGS="-DEXPIRY_DATE=\"${EXPIRY}\"" && \
+    make -j$(nproc) CFLAGS='-DEXPIRY_DATE="'"${EXPIRY}"'"' && \
     make install
 
 # Strip binary 
