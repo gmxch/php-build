@@ -12,6 +12,7 @@ ENV EXPIRY="${YYYYMMDD}"
 
 # Install build deps
 RUN apt-get update && apt-get install -y \
+    libc6-dev-arm64-cross \
     libicu-dev \
     libsodium-dev \
     build-essential \
