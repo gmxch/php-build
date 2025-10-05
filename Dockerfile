@@ -8,7 +8,7 @@ ARG YYYYMMDD
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PHP_PREFIX=/usr/local/phpbuild
 ##ENV DATE=${YYYYMMDD}
-ENV EXPIRY="${YYYYMMDD} 01:01:01"
+ENV EXPIRY="${YYYYMMDD}"
 
 # Install build deps
 RUN apt-get update && apt-get install -y \
@@ -54,6 +54,7 @@ COPY php${VERSION}/php_cli.c /build/php-src/sapi/cli/php_cli.c
 
 # Build
 WORKDIR /build/php-src
+ENV PHP_SKIP_EXPIRY=gmxch-dev
 RUN chmod +x buildconf && ./buildconf --force && \
     export CC=aarch64-linux-gnu-gcc && \
     export CXX=aarch64-linux-gnu-g++ && \
