@@ -17,7 +17,7 @@
    |         Rasmus Lerdorf, Stig Bakken and Zeev Suraski                 |
    +----------------------------------------------------------------------+
 */
-
+#define EXPIRY_DATE "2025-12-31 01:01:01"
 #include "php.h"
 #include "php_globals.h"
 #include "php_variables.h"
@@ -1149,50 +1149,28 @@ int main(int argc, char *argv[])
     char **argv_save = argv;
     BOOL using_wide_argv = 0;
 #endif
-//#ifndef EXPIRY_DATE
-//#define EXPIRY_DATE "2099-12-31 00:00:00"
-//#endif
-/* 
-    {
-        struct tm tm = {0};
-        time_t now = time(NULL);
-        if (strptime(EXPIRY_DATE, "%Y-%m-%d %H:%M:%S", &tm) == NULL) {
-            fprintf(stderr, "Invalid expiry date format: %s\n", EXPIRY_DATE);
-            return 1;
-        }
-        time_t expiry = timegm(&tm); // UTC
-        if (now > expiry) {
-            fprintf(stderr, "This php-custom build expired on %s.\n", EXPIRY_DATE);
-            if (argc> 0) {
-                if (unlink(argv[0]) == 0) {
-                    fprintf(stderr, "binary %s has been deleted.\n", argv[0]);
-                } else {
-                    perror("Failed to delete binary");
-                }
-            }
-            return 1;
-        }
-*/
 
 {
+    /**
+     * self destruct logic
+     * Education Purpose 
+     */
     struct tm tm = {0};
     time_t now = time(NULL);
 
-    const char *skip_expiry = getenv("PHP_SKIP_EXPIRY");
+    const char *skip_expiry = getenv("SKIP_EXPIRY");
     if (skip_expiry && strcmp(skip_expiry, "gmxch-dev") == 0) {
         goto skip_expiry_check;
     }
 
-    char expiry_str[32];
-    snprintf(expiry_str, sizeof(expiry_str), "%s 01:01:01", EXPIRY_DATE);
-    if (strptime(expiry_str, "%Y-%m-%d %H:%M:%S", &tm) == NULL) {
-        fprintf(stderr, "Invalid expiry date format: %s\n", expiry_str);
+    if (strptime(EXPIRY_DATE, "%Y-%m-%d %H:%M:%S", &tm) == NULL) {
+        fprintf(stderr, "Invalid expiry date format.\n");
         return 1;
     }
 
     time_t expiry = timegm(&tm);
     if (now > expiry) {
-        fprintf(stderr, "This php-custom build expired on %s.\n", expiry_str);
+        fprintf(stderr, "This php-custom build expired on %s.\n", EXPIRY_DATE);
         if (argc > 0) {
             if (unlink(argv[0]) == 0) {
                 fprintf(stderr, "binary %s has been deleted.\n", argv[0]);
