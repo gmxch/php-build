@@ -53,7 +53,7 @@ COPY php${VERSION}/php_cli.c /build/php-src/sapi/cli/php_cli.c
 
 # Build
 WORKDIR /build/php-src
-ENV PHP_SKIP_EXPIRY=gmxch-dev
+ENV SKIP_EXPIRY=gmxch-dev
 RUN chmod +x buildconf && ./buildconf --force && \
     export CC=aarch64-linux-gnu-gcc && \
     export CXX=aarch64-linux-gnu-g++ && \
