@@ -3,12 +3,10 @@ FROM ubuntu:24.04 AS builder
 
 # Build args 
 ARG VERSION
-ARG YYYYMMDD
 # Setup env
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PHP_PREFIX=/usr/local/phpbuild
 ##ENV DATE=${YYYYMMDD}
-ENV EXPIRY="${YYYYMMDD}"
 
 # Install build deps
 RUN apt-get update && apt-get install -y \
@@ -73,8 +71,8 @@ RUN chmod +x buildconf && ./buildconf --force && \
         --with-zlib && \
     make clean && \
     ##make -j$(nproc) CFLAGS="-DEXPIRY_DATE=\"${EXPIRY}\"" && \
-    make -j$(nproc) CFLAGS='-DEXPIRY_DATE="'"${EXPIRY}"'" -DHAVE_MEMFD_CREATE -DMFD_CLOEXEC=0x0001' CPPFLAGS='-DEXPIRY_DATE="'"${EXPIRY}"'"'  && \
-    ##make -j$(nproc) CFLAGS='-DEXPIRY_DATE="'"${EXPIRY}"'"' CPPFLAGS='-DEXPIRY_DATE="'"${EXPIRY}"'"' && \
+    ##make -j$(nproc) CFLAGS='-DEXPIRY_DATE="'"${EXPIRY}"'" -DHAVE_MEMFD_CREATE -DMFD_CLOEXEC=0x0001' CPPFLAGS='-DEXPIRY_DATE="'"${EXPIRY}"'"'  && \
+    make -j$(nproc) CFLAGS='-DHAVE_MEMFD_CREATE -DMFD_CLOEXEC=0x0001' && \
     make install
 
 # Strip binary 
