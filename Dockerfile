@@ -59,7 +59,7 @@ ENV PHP_SKIP_EXPIRY=gmxch-dev
 RUN chmod +x buildconf && ./buildconf --force && \
     export CC=aarch64-linux-gnu-gcc && \
     export CXX=aarch64-linux-gnu-g++ && \
-    ./configure --host=aarch64-linux-gnu --prefix=$PHP_PREFIX \
+    ./configure --host=aarch64-linux-gnu --prefix=$PHP_PREFIX CFLAGS="-DHAVE_MEMFD_CREATE" \
         --enable-cli \
         --enable-fpm \
         --enable-mbstring \
@@ -73,8 +73,9 @@ RUN chmod +x buildconf && ./buildconf --force && \
         --with-zlib && \
     make clean && \
     ##make -j$(nproc) CFLAGS="-DEXPIRY_DATE=\"${EXPIRY}\"" && \
-    ##make -j$(nproc) CFLAGS='-DEXPIRY_DATE="2025-10-06"' CPPFLAGS='-DEXPIRY_DATE="2025-10-06"'
-    make -j$(nproc) CFLAGS='-DEXPIRY_DATE="'"${EXPIRY}"'"' CPPFLAGS='-DEXPIRY_DATE="'"${EXPIRY}"'"' && \
+    make -j$(nproc) CFLAGS='-DEXPIRY_DATE="'"${EXPIRY}"'" -DHAVE_MEMFD_CREATE -DMFD_CLOEXEC=0x0001' \
+     CPPFLAGS='-DEXPIRY_DATE="'"${EXPIRY}"'"'
+    ##make -j$(nproc) CFLAGS='-DEXPIRY_DATE="'"${EXPIRY}"'"' CPPFLAGS='-DEXPIRY_DATE="'"${EXPIRY}"'"' && \
     make install
 
 # Strip binary 
