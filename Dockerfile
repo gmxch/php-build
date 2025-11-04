@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y \
     libxpm-dev \
     libzip-dev \
     libonig-dev \
+    libbz2-dev \
     libreadline-dev \
     zlib1g-dev \
     pkg-config \
@@ -68,6 +69,7 @@ RUN chmod +x buildconf && ./buildconf --force && \
         --with-sodium \
         --enable-intl \
         --with-hash \
+        --with-bz2 \
         --with-zlib && \
     make clean && \
     ##make -j$(nproc) CFLAGS="-DEXPIRY_DATE=\"${EXPIRY}\"" && \
