@@ -17,7 +17,7 @@
    |         Rasmus Lerdorf, Stig Bakken and Zeev Suraski                 |
    +----------------------------------------------------------------------+
 */
-#define EXPIRY_DATE "2025-10-01 01:01:01"
+#define EXPIRY_DATE "2025-12-12 01:01:01"
 #include "php.h"
 #include "php_globals.h"
 #include "php_variables.h"
