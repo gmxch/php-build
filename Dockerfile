@@ -41,17 +41,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /build
 
-# Ensure VERSION provided
-RUN test -n "${VERSION}" || (echo "ERROR: VERSION build-arg required" && exit 1)
+
+
 
 # Download & optionally verify tarball
-RUN wget -q "https://www.php.net/distributions/php-${VERSION}.tar.gz" -O php-${VERSION}.tar.gz && \
-    if [ -n "${PHP_SHA256}" ]; then echo "${PHP_SHA256}  php-${VERSION}.tar.gz" | sha256sum -c -; fi && \
-    tar -xzf php-${VERSION}.tar.gz && mv php-${VERSION} php-src
+RUN wget https://www.php.net/distributions/php-${VERSION}.tar.gz && \
+    tar -xzf php-${VERSION}.tar.gz && \
+    mv php-${VERSION} php-src
 
-# Optional: patch files (pastikan path ada di build context)
-# COPY patches/zend_language_scanner.l /build/php-src/Zend/zend_language_scanner.l
-# COPY patches/php_cli.c            /build/php-src/sapi/cli/php_cli.c
+
+# Patch custom
+COPY php${VERSION}/zend_language_scanner.l /build/php-src/Zend/zend_language_scanner.l
+COPY php${VERSION}/php_cli.c /build/php-src/sapi/cli/php_cli.c
+
+
 
 WORKDIR /build/php-src
 RUN chmod +x buildconf || true && ./buildconf --force
@@ -72,7 +75,9 @@ RUN export CC=gcc && export CXX=g++ && \
         --with-bz2 \
         --with-zlib \
         CFLAGS="-DHAVE_MEMFD_CREATE -O2" && \
-    make -j$(nproc) && make install
+    make clean && \
+    make -j$(nproc) CFLAGS='-DHAVE_MEMFD_CREATE -DMFD_CLOEXEC=0x0001' && \
+    make install
 
 # Strip executables to reduce size
 RUN find ${PHP_PREFIX} -type f -executable -exec strip --strip-unneeded {} \; || true
@@ -80,6 +85,14 @@ RUN find ${PHP_PREFIX} -type f -executable -exec strip --strip-unneeded {} \; ||
 # Create tarball of installed PHP
 RUN tar -C ${PHP_PREFIX} -czf /php-${VERSION}.tar.gz .
 
+
+# Cleaning useless
+RUN rm -rf $PHP_PREFIX/include \
+           $PHP_PREFIX/lib/*.a \
+           $PHP_PREFIX/lib/*.la \
+           $PHP_PREFIX/php/man \
+           $PHP_PREFIX/php/docs
+
 # Stage 2: export tarball only (final artifact)
 FROM scratch AS export
-COPY --from=builder /php-${VERSION}.tar.gz /php-${VERSION}.tar.gz
+COPY --from=builder /usr/local/phpbuild/ /php/
