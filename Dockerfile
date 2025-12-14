@@ -25,6 +25,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxml2-dev \
     libssl-dev \
     libcurl4-openssl-dev \
+    libsqlite3-dev \
     libjpeg-dev \
     libpng-dev \
     libwebp-dev \
