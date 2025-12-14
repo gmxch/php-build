@@ -1,5 +1,5 @@
 # Stage 1: Build PHP (x86_64 native)
-FROM ubuntu:24.04 AS builder
+FROM ubuntu:25.04 AS builder
 
 ARG VERSION
 ARG PHP_SHA256=""
