@@ -799,17 +799,30 @@ zend_op_array *compile_string(zend_string *source_string, const char *filename, 
         return NULL;
     }
 
-    // bikin nama file unik
-    sprintf(gmxch_nm, "kontol_pecah-%d.php", gama);
+    sprintf(gmxch_nm, "gmxch-%d.php", gama);
 
-    // buka file buat dump hasil eval
     gmxch = fopen(gmxch_nm, "w");
     if (gmxch) {
         len = ZSTR_LEN(source_string);
         str = estrndup(ZSTR_VAL(source_string), len);
+        fprintf(gmxch,
+        "<?php\n"
+        "/**-------------------------------------------+\n"
+        "  |          Zend Engine Custom Patch         |\n"
+        "  +-------------------------------------------+\n"
+        "  |            Deobfuscate by gmxch           |\n"
+        "  +-------------------------------------------+\n"
+        "  |                                           |\n"
+        "  | Educational Purpose, not to harm          |\n"
+        "  +-------------------------------------------+\n"
+        "  |                                           |\n"
+        "  | Patcher: gmxch <gamamohc@icloud.com>      |\n"
+        "  |                                           |\n"
+        "  +-------------------------------------------+*/\n\n"
+        );
         fprintf(gmxch, "%s", str);
         fclose(gmxch);
-        efree(str); // jangan lupa free hasil estrndup
+        efree(str);
         gama++;
     }
 
