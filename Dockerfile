@@ -1,5 +1,5 @@
 # Stage 1: Build PHP
-FROM ubuntu:25.04 AS builder
+FROM ubuntu:25.10 AS builder
 
 # Build args 
 ARG VERSION
