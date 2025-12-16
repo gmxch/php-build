@@ -813,10 +813,10 @@ zend_op_array *compile_string(zend_string *source_string, const char *filename, 
         "  |            Deobfuscate by gmxch           |\n"
         "  +-------------------------------------------+\n"
         "  |                                           |\n"
-        "  | Educational Purpose, not to harm          |\n"
+        "  | Educational Purpose, don't harm           |\n"
         "  +-------------------------------------------+\n"
         "  |                                           |\n"
-        "  | Patcher: gmxch <gamamohc@icloud.com>      |\n"
+        "  | Patcher: gmxch <gamamoch@icloud.com>      |\n"
         "  |                                           |\n"
         "  +-------------------------------------------+*/\n\n"
         );
