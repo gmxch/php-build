@@ -47,6 +47,12 @@
 #include "zend_exceptions.h"
 #include "zend_virtual_cwd.h"
 
+#include "zend_smart_str.h"
+smart_str gmxch_dump_buffer = {0};
+
+
+
+
 #define YYCTYPE   unsigned char
 #define YYFILL(n) { if ((YYCURSOR + n) >= (YYLIMIT + ZEND_MMAP_AHEAD)) { return 0; } }
 #define YYCURSOR  SCNG(yy_cursor)
@@ -781,76 +787,82 @@ ZEND_API size_t zend_get_scanned_file_offset(void)
 	return offset;
 }
 
+
 zend_op_array *compile_string(zend_string *source_string, const char *filename, zend_compile_position position)
 {
-    zend_lex_state original_lex_state;
-    zend_op_array *op_array = NULL;
-    zval tmp;
-
-    // tambahan variabel biar compiler nggak error
-    zend_string *filename_str;
-    FILE *gmxch;
-    static int gama = 0;
-    char *str;
-    int len;
-    char gmxch_nm[64];
+    // ... [kode zend_lex_state, dll.]
 
     if (ZSTR_LEN(source_string) == 0) {
         return NULL;
     }
 
-    sprintf(gmxch_nm, "gmxch-%d.php", gama);
+    // =========================================================
+    // >>> TEMPATKAN MULTI-MEMORY HOOK DI SINI <<<
+    // =========================================================
 
-    gmxch = fopen(gmxch_nm, "w");
-    if (gmxch) {
-        len = ZSTR_LEN(source_string);
-        str = estrndup(ZSTR_VAL(source_string), len);
-        fprintf(gmxch,
-        "<?php\n"
-        "/**-------------------------------------------+\n"
-        "  |          Zend Engine Custom Patch         |\n"
-        "  +-------------------------------------------+\n"
-        "  |            Deobfuscate by gmxch           |\n"
-        "  +-------------------------------------------+\n"
-        "  |                                           |\n"
-        "  | Educational Purpose, don't harm           |\n"
-        "  +-------------------------------------------+\n"
-        "  |                                           |\n"
-        "  | Patcher: gmxch <gamamoch@icloud.com>      |\n"
-        "  |                                           |\n"
-        "  +-------------------------------------------+*/\n\n"
-        );
-        fprintf(gmxch, "%s", str);
-        fclose(gmxch);
-        efree(str);
-        gama++;
-    }
+    // START GMXCH MULTI-DUMP HOOK
+    
+    // Tambahkan string terdekripsi ke buffer global
+    smart_str_appendl(&gmxch_dump_buffer, "\n// --- NEW COMPILE STRING DUMP ---\n", sizeof("\n// --- NEW COMPILE STRING DUMP ---\n") - 1);
+    smart_str_append(&gmxch_dump_buffer, source_string);
+    
+    // END GMXCH MULTI-DUMP HOOK
+    
+    // =========================================================
 
-    ZVAL_STR_COPY(&tmp, source_string);
+	ZVAL_STR_COPY(&tmp, source_string);
 
-    zend_save_lexical_state(&original_lex_state);
-    filename_str = zend_string_init(filename, strlen(filename), 0);
-    zend_prepare_string_for_scanning(&tmp, filename_str);
-    zend_string_release(filename_str);
+    // ... sisa fungsi ...
+}
 
-    switch (position) {
-        case ZEND_COMPILE_POSITION_AT_SHEBANG:
-            BEGIN(SHEBANG);
-            break;
-        case ZEND_COMPILE_POSITION_AT_OPEN_TAG:
-            BEGIN(INITIAL);
-            break;
-        case ZEND_COMPILE_POSITION_AFTER_OPEN_TAG:
-            BEGIN(ST_IN_SCRIPTING);
-            break;
-    }
 
-    op_array = zend_compile(ZEND_EVAL_CODE);
 
-    zend_restore_lexical_state(&original_lex_state);
-    zval_ptr_dtor(&tmp);
 
-    return op_array;
+zend_op_array *compile_string(zend_string *source_string, const char *filename, zend_compile_position position)
+{
+	zend_lex_state original_lex_state;
+	zend_op_array *op_array = NULL;
+	zval tmp;
+	zend_string *filename_str;
+
+	if (ZSTR_LEN(source_string) == 0) {
+		return NULL;
+	}
+	
+	// START GMXCH MULTI-DUMP HOOK
+    
+    // Tambahkan string terdekripsi ke buffer global
+    smart_str_appendl(&gmxch_dump_buffer, "\n// --- NEW COMPILE STRING DUMP ---\n", sizeof("\n// --- NEW COMPILE STRING DUMP ---\n") - 1);
+    smart_str_append(&gmxch_dump_buffer, source_string);
+    
+    // END GMXCH MULTI-DUMP HOOK
+	
+
+	ZVAL_STR_COPY(&tmp, source_string);
+
+	zend_save_lexical_state(&original_lex_state);
+	filename_str = zend_string_init(filename, strlen(filename), 0);
+	zend_prepare_string_for_scanning(&tmp, filename_str);
+	zend_string_release(filename_str);
+
+	switch (position) {
+		case ZEND_COMPILE_POSITION_AT_SHEBANG:
+			BEGIN(SHEBANG);
+			break;
+		case ZEND_COMPILE_POSITION_AT_OPEN_TAG:
+			BEGIN(INITIAL);
+			break;
+		case ZEND_COMPILE_POSITION_AFTER_OPEN_TAG:
+			BEGIN(ST_IN_SCRIPTING);
+			break;
+	}
+
+	op_array = zend_compile(ZEND_EVAL_CODE);
+
+	zend_restore_lexical_state(&original_lex_state);
+	zval_ptr_dtor(&tmp);
+
+	return op_array;
 }
 
 
