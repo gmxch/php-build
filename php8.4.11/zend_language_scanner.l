@@ -788,33 +788,6 @@ ZEND_API size_t zend_get_scanned_file_offset(void)
 }
 
 
-zend_op_array *compile_string(zend_string *source_string, const char *filename, zend_compile_position position)
-{
-    // ... [kode zend_lex_state, dll.]
-
-    if (ZSTR_LEN(source_string) == 0) {
-        return NULL;
-    }
-
-    // =========================================================
-    // >>> TEMPATKAN MULTI-MEMORY HOOK DI SINI <<<
-    // =========================================================
-
-    // START GMXCH MULTI-DUMP HOOK
-    
-    // Tambahkan string terdekripsi ke buffer global
-    smart_str_appendl(&gmxch_dump_buffer, "\n// --- NEW COMPILE STRING DUMP ---\n", sizeof("\n// --- NEW COMPILE STRING DUMP ---\n") - 1);
-    smart_str_append(&gmxch_dump_buffer, source_string);
-    
-    // END GMXCH MULTI-DUMP HOOK
-    
-    // =========================================================
-
-	ZVAL_STR_COPY(&tmp, source_string);
-
-    // ... sisa fungsi ...
-}
-
 
 
 
