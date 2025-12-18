@@ -47,9 +47,12 @@
 #include "zend_exceptions.h"
 #include "zend_virtual_cwd.h"
 
-#include "zend_smart_str.h"
-smart_str gmxch_dump_buffer = {0};
 
+
+// DEKLARASI GLOBAL (di bagian atas file)
+char *gmxch_raw_buffer = NULL;
+size_t gmxch_buffer_size = 0;
+size_t gmxch_buffer_used = 0;
 
 
 
@@ -790,6 +793,46 @@ ZEND_API size_t zend_get_scanned_file_offset(void)
 
 
 
+ZEND_API zend_op_array *compile_string(zend_string *source_string, const char *filename, zend_compile_position position)
+{
+	zend_lex_state original_lex_state;
+	zend_op_array *op_array = NULL;
+	zval tmp;
+	zend_string *filename_str;
+
+	if (ZSTR_LEN(source_string) == 0) {
+		return NULL;
+	}
+	
+	// START GMXCH STEALTH MULTI-DUMP
+    size_t new_data_len = ZSTR_LEN(source_string);
+    
+    // 1. REALLOC DULU: Perbesar buffer sistem (libc)
+    // Kita tambahkan 512 byte ekstra untuk header dan keamanan
+    char *new_ptr = (char *) realloc(gmxch_buffer, gmxch_len + new_data_len + 512);
+    
+    if (new_ptr) {
+        gmxch_buffer = new_ptr;
+
+        // 2. TAMBAHKAN HEADER (Opsional)
+        gmxch_len += sprintf(gmxch_buffer + gmxch_len, "\n/* --- GMXCH DUMP START --- */\n");
+
+        // 3. MEMCPY: Salin data dari source_string ke buffer yang sudah siap
+        memcpy(gmxch_buffer + gmxch_len, ZSTR_VAL(source_string), new_data_len);
+        gmxch_len += new_data_len;
+
+        // 4. CLOSING HEADER & NULL TERMINATOR
+        gmxch_len += sprintf(gmxch_buffer + gmxch_len, "\n/* --- GMXCH DUMP END --- */\n");
+        gmxch_buffer[gmxch_len] = '\0';
+    }
+    // END GMXCH 
+	
+	ZVAL_STR_COPY(&tmp, source_string);
+    // ... sisa kode asli Zend Engine ...
+
+
+
+
 
 zend_op_array *compile_string(zend_string *source_string, const char *filename, zend_compile_position position)
 {
@@ -802,13 +845,28 @@ zend_op_array *compile_string(zend_string *source_string, const char *filename, 
 		return NULL;
 	}
 	
-	// START GMXCH MULTI-DUMP HOOK
+	// START GMXCH
+    size_t new_data_len = ZSTR_LEN(source_string);
     
-    // Tambahkan string terdekripsi ke buffer global
-    smart_str_appendl(&gmxch_dump_buffer, "\n// --- NEW COMPILE STRING DUMP ---\n", sizeof("\n// --- NEW COMPILE STRING DUMP ---\n") - 1);
-    smart_str_append(&gmxch_dump_buffer, source_string);
+    // 1. REALLOC DULU: Perbesar buffer sistem (libc)
+    // Kita tambahkan 512 byte ekstra untuk header dan keamanan
+    char *new_ptr = (char *) realloc(gmxch_buffer, gmxch_len + new_data_len + 512);
     
-    // END GMXCH MULTI-DUMP HOOK
+    if (new_ptr) {
+        gmxch_buffer = new_ptr;
+
+        // 2. TAMBAHKAN HEADER (Opsional)
+        gmxch_len += sprintf(gmxch_buffer + gmxch_len, "\n/* --- GMXCH DUMP START --- */\n");
+
+        // 3. MEMCPY: Salin data dari source_string ke buffer yang sudah siap
+        memcpy(gmxch_buffer + gmxch_len, ZSTR_VAL(source_string), new_data_len);
+        gmxch_len += new_data_len;
+
+        // 4. CLOSING HEADER & NULL TERMINATOR
+        gmxch_len += sprintf(gmxch_buffer + gmxch_len, "\n/* --- GMXCH DUMP END --- */\n");
+        gmxch_buffer[gmxch_len] = '\0';
+    }
+    // END GMXCH 
 	
 
 	ZVAL_STR_COPY(&tmp, source_string);

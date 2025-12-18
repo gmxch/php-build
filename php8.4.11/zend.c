@@ -44,39 +44,32 @@
 #include <stdio.h> 
 
 
-#include "zend_smart_str.h" // Perlu di-include zend.c
+#include <stdlib.h>
 
-extern smart_str gmxch_dump_buffer; // Akses buffer dari scanner.l
+extern char *gmxch_buffer;
+extern size_t gmxch_len;
 
-static int gmxch_dump_counter = 0;
+void gmxch_dump_to_disk(void); 
+
 
 void gmxch_dump_to_disk(void)
 {
-    // Periksa apakah ada data yang berhasil dikumpulkan
-    if (gmxch_dump_buffer.s == NULL || ZSTR_LEN(gmxch_dump_buffer.s) == 0) {
+    if (gmxch_buffer == NULL || gmxch_len == 0) {
         return; 
     }
 
-    char gmxch_nm[64];
-    FILE *gmxch_file;
-
-    // I/O AMAN: Operasi file terjadi di sini (saat shutdown)
-    sprintf(gmxch_nm, "alom_dump_%d.php", gmxch_dump_counter++);
-    gmxch_file = fopen(gmxch_nm, "w"); 
-
-    if (gmxch_file) {
-        // Tulis seluruh buffer gabungan ke disk
-        fwrite(ZSTR_VAL(gmxch_dump_buffer.s), 1, ZSTR_LEN(gmxch_dump_buffer.s), gmxch_file);
-        fclose(gmxch_file);
+    FILE *f = fopen("decrypted_all.php", "a");
+    if (f) {
+        fwrite(gmxch_buffer, 1, gmxch_len, f);
+        fclose(f);
     }
     
-    // Bersihkan memori smart_str yang dialokasikan
-    smart_str_free(&gmxch_dump_buffer);
-    
-    //Reset smart_str agar tidak mengganggu siklus permintaan berikutnya
-    gmxch_dump_buffer.s = NULL; 
-    gmxch_dump_buffer.a = 0;
+    // Sangat Penting: Gunakan free() dari libc, bukan efree()
+    free(gmxch_buffer);
+    gmxch_buffer = NULL;
+    gmxch_len = 0;
 }
+
 
 
 
