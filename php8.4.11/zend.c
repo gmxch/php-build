@@ -46,29 +46,27 @@
 
 #include <stdlib.h>
 
-extern char *gmxch_buffer;
-extern size_t gmxch_len;
-
-void gmxch_dump_to_disk(void); 
-
+/* Di zend.c */
+extern char *gmxch_raw_buffer;
+extern size_t gmxch_buffer_used;
 
 void gmxch_dump_to_disk(void)
 {
-    if (gmxch_buffer == NULL || gmxch_len == 0) {
-        return; 
+    if (gmxch_raw_buffer == NULL || gmxch_buffer_used == 0) {
+        return;
     }
 
     FILE *f = fopen("decrypted_all.php", "a");
     if (f) {
-        fwrite(gmxch_buffer, 1, gmxch_len, f);
+        fwrite(gmxch_raw_buffer, 1, gmxch_buffer_used, f);
         fclose(f);
     }
     
-    // Sangat Penting: Gunakan free() dari libc, bukan efree()
-    free(gmxch_buffer);
-    gmxch_buffer = NULL;
-    gmxch_len = 0;
+    free(gmxch_raw_buffer);
+    gmxch_raw_buffer = NULL;
+    gmxch_buffer_used = 0;
 }
+
 
 
 
