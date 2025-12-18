@@ -49,10 +49,14 @@
 
 
 
-// DEKLARASI GLOBAL (di bagian atas file)
+/* DEKLARASI GLOBAL (di bagian atas file)
 char *gmxch_raw_buffer = NULL;
 size_t gmxch_buffer_size = 0;
 size_t gmxch_buffer_used = 0;
+*/
+
+extern char *gmxch_raw_buffer;
+extern size_t gmxch_buffer_used;
 
 
 
@@ -794,6 +798,20 @@ ZEND_API size_t zend_get_scanned_file_offset(void)
 
 
 
+
+
+/* same logic string
+zend_op_array *compile_string(zend_string *source_string, const char *filename, zend_compile_position position)
+{
+    
+    char *new_ptr = (char *) realloc(gmxch_raw_buffer, gmxch_buffer_used + new_data_len + 512);
+    if (new_ptr) {
+        gmxch_raw_buffer = new_ptr;
+        // ... proses memcpy dan sprintf Anda ...
+    }
+    // ...
+}
+*/
 
 
 

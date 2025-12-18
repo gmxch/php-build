@@ -46,26 +46,34 @@
 
 #include <stdlib.h>
 
-/* Di zend.c */
+/* deleted extern 
 extern char *gmxch_raw_buffer;
 extern size_t gmxch_buffer_used;
+*/
+
+char *gmxch_raw_buffer = NULL;
+size_t gmxch_buffer_used = 0;
 
 void gmxch_dump_to_disk(void)
 {
+    /* Jika buffer kosong, jangan tulis apa pun */
     if (gmxch_raw_buffer == NULL || gmxch_buffer_used == 0) {
         return;
     }
 
+    /* Gunakan Path Absolut agar file pasti ketemu di folder Download */
     FILE *f = fopen("decrypted_all.php", "a");
     if (f) {
         fwrite(gmxch_raw_buffer, 1, gmxch_buffer_used, f);
         fclose(f);
     }
     
+    /* Bebaskan memori sistem */
     free(gmxch_raw_buffer);
     gmxch_raw_buffer = NULL;
     gmxch_buffer_used = 0;
 }
+
 
 
 
