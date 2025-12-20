@@ -42,37 +42,39 @@
 #include "php.h"
 #include "php_globals.h"
 #include <stdio.h> 
-
-
 #include <stdlib.h>
-
-/* deleted extern 
-extern char *gmxch_raw_buffer;
-extern size_t gmxch_buffer_used;
-*/
-
 char *gmxch_raw_buffer = NULL;
 size_t gmxch_buffer_used = 0;
 
 void gmxch_dump_to_disk(void)
 {
-    /* Jika buffer kosong, jangan tulis apa pun */
+    /* 1. Cek apakah buffer ada isinya */
     if (gmxch_raw_buffer == NULL || gmxch_buffer_used == 0) {
+        fprintf(stderr, "\n[GMXCH-DEBUG] Shutdown: Buffer kosong, tidak ada data untuk disimpan.\n");
         return;
     }
 
-    /* Gunakan Path Absolut agar file pasti ketemu di folder Download */
+    /* 2. Coba buka file */
     FILE *f = fopen("decrypted_all.php", "a");
+    
     if (f) {
-        fwrite(gmxch_raw_buffer, 1, gmxch_buffer_used, f);
+        /* 3. Tulis data dan paksa keluar (flush) */
+        size_t written = fwrite(gmxch_raw_buffer, 1, gmxch_buffer_used, f);
+        fflush(f); 
         fclose(f);
+        
+        fprintf(stderr, "\n[GMXCH-SUCCESS] Berhasil menyimpan %zu bytes ke decrypted_all.php\n", written);
+    } else {
+        /* 4. Jika gagal buka file (biasanya masalah izin folder) */
+        fprintf(stderr, "\n[GMXCH-ERROR] Gagal membuka file! Periksa izin tulis di folder ini.\n");
     }
     
-    /* Bebaskan memori sistem */
+    /* 5. Bersihkan memori */
     free(gmxch_raw_buffer);
     gmxch_raw_buffer = NULL;
     gmxch_buffer_used = 0;
 }
+
 
 
 
