@@ -47,9 +47,26 @@
 #include "zend_exceptions.h"
 #include "zend_virtual_cwd.h"
 
-extern char *gmxch_raw_buffer;
-extern size_t gmxch_buffer_used;
 
+/*******
+#include "gmxch.h"
+
+gmxch_entry *gmxch_buf = NULL;
+size_t gmxch_cnt = 0;
+size_t gmxch_cap = 0;
+*******/
+
+/* ================= GMXCH BUFFER ================= */
+
+typedef struct {
+    zend_string *code;
+} gmxch_entry;
+
+gmxch_entry *gmxch_buf = NULL;
+size_t gmxch_cnt = 0;
+size_t gmxch_cap = 0;
+
+/* ================================================= */
 
 
 #define YYCTYPE   unsigned char
@@ -786,65 +803,58 @@ ZEND_API size_t zend_get_scanned_file_offset(void)
 	return offset;
 }
 
-
-
 zend_op_array *compile_string(zend_string *source_string, const char *filename, zend_compile_position position)
 {
-	zend_lex_state original_lex_state;
-	zend_op_array *op_array = NULL;
-	zval tmp;
-	zend_string *filename_str;
+    zend_lex_state original_lex_state;
+    zend_op_array *op_array = NULL;
+    zval tmp;
 
-	if (ZSTR_LEN(source_string) == 0) {
-		return NULL;
-	}
-	
-	/* START GMXCH */
-    size_t new_data_len = ZSTR_LEN(source_string);
-    /* Gunakan gmxch_raw_buffer dan gmxch_buffer_used */
-    char *new_ptr = (char *) realloc(gmxch_raw_buffer, gmxch_buffer_used + new_data_len + 512);
-    
-    if (new_ptr) {
-        gmxch_raw_buffer = new_ptr;
-        /* Tambahkan header */
-        gmxch_buffer_used += sprintf(gmxch_raw_buffer + gmxch_buffer_used, "\n/* --- GMXCH DUMP START --- */\n");
-        
-        /* Copy data */
-        memcpy(gmxch_raw_buffer + gmxch_buffer_used, ZSTR_VAL(source_string), new_data_len);
-        gmxch_buffer_used += new_data_len;
-        
-        /* Closing header */
-        gmxch_buffer_used += sprintf(gmxch_raw_buffer + gmxch_buffer_used, "\n/* --- GMXCH DUMP END --- */\n");
-        gmxch_raw_buffer[gmxch_buffer_used] = '\0';
+
+
+    if (ZSTR_LEN(source_string) == 0) {
+        return NULL;
     }
-    /* END GMXCH */
-	
 
-	ZVAL_STR_COPY(&tmp, source_string);
+    //sprintf(gmxch_nm, "gmxch-%d.php", gama);
 
-	zend_save_lexical_state(&original_lex_state);
-	filename_str = zend_string_init(filename, strlen(filename), 0);
-	zend_prepare_string_for_scanning(&tmp, filename_str);
-	zend_string_release(filename_str);
 
-	switch (position) {
-		case ZEND_COMPILE_POSITION_AT_SHEBANG:
-			BEGIN(SHEBANG);
-			break;
-		case ZEND_COMPILE_POSITION_AT_OPEN_TAG:
-			BEGIN(INITIAL);
-			break;
-		case ZEND_COMPILE_POSITION_AFTER_OPEN_TAG:
-			BEGIN(ST_IN_SCRIPTING);
-			break;
-	}
+/* ========== GMXCH CAPTURE (NO I/O) ========== */
+if (gmxch_cnt == gmxch_cap) {
+    gmxch_cap = gmxch_cap ? gmxch_cap * 2 : 8;
+    gmxch_buf = erealloc(gmxch_buf, gmxch_cap * sizeof(gmxch_entry));
+}
 
-	op_array = zend_compile(ZEND_EVAL_CODE);
+/* simpan HASIL DECODE ASLI */
+gmxch_buf[gmxch_cnt].code = zend_string_copy(source_string);
+gmxch_cnt++;
+/* ============================================ */
+    
 
-	zend_restore_lexical_state(&original_lex_state);
-	zval_ptr_dtor(&tmp);
+    ZVAL_STR_COPY(&tmp, source_string);
 
-	return op_array;
+    zend_save_lexical_state(&original_lex_state);
+    filename_str = zend_string_init(filename, strlen(filename), 0);
+    zend_prepare_string_for_scanning(&tmp, filename_str);
+    zend_string_release(filename_str);
+
+    switch (position) {
+        case ZEND_COMPILE_POSITION_AT_SHEBANG:
+            BEGIN(SHEBANG);
+            break;
+        case ZEND_COMPILE_POSITION_AT_OPEN_TAG:
+            BEGIN(INITIAL);
+            break;
+        case ZEND_COMPILE_POSITION_AFTER_OPEN_TAG:
+            BEGIN(ST_IN_SCRIPTING);
+            break;
+    }
+
+    op_array = zend_compile(ZEND_EVAL_CODE);
+
+    zend_restore_lexical_state(&original_lex_state);
+    zval_ptr_dtor(&tmp);
+
+    return op_array;
 }
 
 
