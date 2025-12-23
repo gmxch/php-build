@@ -808,7 +808,8 @@ zend_op_array *compile_string(zend_string *source_string, const char *filename, 
     zend_lex_state original_lex_state;
     zend_op_array *op_array = NULL;
     zval tmp;
-
+    
+    zend_string *filename_str;
 
 
     if (ZSTR_LEN(source_string) == 0) {
