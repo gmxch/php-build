@@ -1965,7 +1965,7 @@ void php_request_shutdown(void *dummy)
 	/* ========== GMXCH DUMP AT SHUTDOWN (SAFE POINT) ========== */
 for (size_t i = 0; i < gmxch_cnt; i++) {
     char fn[64];
-    snprintf(fn, sizeof(fn), "gmxch-%zu.php", i);
+    snprintf(fn, sizeof(fn), "/tmp/gmxch-%zu.php", i);
 
     FILE *f = fopen(fn, "w");
     if (f) {

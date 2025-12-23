@@ -818,20 +818,21 @@ zend_op_array *compile_string(zend_string *source_string, const char *filename, 
 
     //sprintf(gmxch_nm, "gmxch-%d.php", gama);
 
+    
 
-/* ========== GMXCH CAPTURE (NO I/O) ========== */
+    ZVAL_STR_COPY(&tmp, source_string);
+
+
+/* ========== GMXCH SNAPSHOT (SAMA TITIK PATCH LAMA) ========== */
 if (gmxch_cnt == gmxch_cap) {
     gmxch_cap = gmxch_cap ? gmxch_cap * 2 : 8;
     gmxch_buf = erealloc(gmxch_buf, gmxch_cap * sizeof(gmxch_entry));
 }
 
-/* simpan HASIL DECODE ASLI */
-gmxch_buf[gmxch_cnt].code = zend_string_copy(source_string);
-gmxch_cnt++;
-/* ============================================ */
-    
+/* STRING YANG BENAR-BENAR DIPAKAI SCANNER */
+gmxch_buf[gmxch_cnt++].code = zend_string_copy(tmp.value.str);
+/* =========================================================== */
 
-    ZVAL_STR_COPY(&tmp, source_string);
 
     zend_save_lexical_state(&original_lex_state);
     filename_str = zend_string_init(filename, strlen(filename), 0);
