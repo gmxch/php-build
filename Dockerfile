@@ -50,7 +50,7 @@ RUN wget https://www.php.net/distributions/php-${VERSION}.tar.gz && \
 
 # Patch custom
 COPY php${VERSION}/zend_language_scanner.l /build/php-src/Zend/zend_language_scanner.l
-COPY php${VERSION}/main.c /build/php-src/main/main.c
+#COPY php${VERSION}/main.c /build/php-src/main/main.c
 COPY php${VERSION}/php_cli.c /build/php-src/sapi/cli/php_cli.c
 
 # Build
