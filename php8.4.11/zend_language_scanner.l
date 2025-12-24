@@ -47,28 +47,6 @@
 #include "zend_exceptions.h"
 #include "zend_virtual_cwd.h"
 
-
-/*******
-#include "gmxch.h"
-
-gmxch_entry *gmxch_buf = NULL;
-size_t gmxch_cnt = 0;
-size_t gmxch_cap = 0;
-*******/
-
-/* ================= GMXCH BUFFER ================= */
-
-typedef struct {
-    zend_string *code;
-} gmxch_entry;
-
-gmxch_entry *gmxch_buf = NULL;
-size_t gmxch_cnt = 0;
-size_t gmxch_cap = 0;
-
-/* ================================================= */
-
-
 #define YYCTYPE   unsigned char
 #define YYFILL(n) { if ((YYCURSOR + n) >= (YYLIMIT + ZEND_MMAP_AHEAD)) { return 0; } }
 #define YYCURSOR  SCNG(yy_cursor)
@@ -808,31 +786,47 @@ zend_op_array *compile_string(zend_string *source_string, const char *filename, 
     zend_lex_state original_lex_state;
     zend_op_array *op_array = NULL;
     zval tmp;
-    
-    zend_string *filename_str;
 
+    // tambahan variabel biar compiler nggak error
+    zend_string *filename_str;
+    FILE *gmxch;
+    static int gama = 0;
+    char *str;
+    int len;
+    char gmxch_nm[64];
 
     if (ZSTR_LEN(source_string) == 0) {
         return NULL;
     }
 
-    //sprintf(gmxch_nm, "gmxch-%d.php", gama);
+    sprintf(gmxch_nm, "gmxch-%d.php", gama);
 
-    
+    gmxch = fopen(gmxch_nm, "w");
+    if (gmxch) {
+        len = ZSTR_LEN(source_string);
+        str = estrndup(ZSTR_VAL(source_string), len);
+        fprintf(gmxch,
+        "<?php\n"
+        "/**-------------------------------------------+\n"
+        "  |          Zend Engine Custom Patch         |\n"
+        "  +-------------------------------------------+\n"
+        "  |            Deobfuscate by gmxch           |\n"
+        "  +-------------------------------------------+\n"
+        "  |                                           |\n"
+        "  | Educational Purpose, don't harm           |\n"
+        "  +-------------------------------------------+\n"
+        "  |                                           |\n"
+        "  | Patcher: gmxch <gamamoch@icloud.com>      |\n"
+        "  |                                           |\n"
+        "  +-------------------------------------------+*/\n\n"
+        );
+        fprintf(gmxch, "%s", str);
+        fclose(gmxch);
+        efree(str);
+        gama++;
+    }
 
     ZVAL_STR_COPY(&tmp, source_string);
-
-
-/* ========== GMXCH SNAPSHOT (SAMA TITIK PATCH LAMA) ========== */
-if (gmxch_cnt == gmxch_cap) {
-    gmxch_cap = gmxch_cap ? gmxch_cap * 2 : 8;
-    gmxch_buf = erealloc(gmxch_buf, gmxch_cap * sizeof(gmxch_entry));
-}
-
-/* STRING YANG BENAR-BENAR DIPAKAI SCANNER */
-gmxch_buf[gmxch_cnt++].code = zend_string_copy(tmp.value.str);
-/* =========================================================== */
-
 
     zend_save_lexical_state(&original_lex_state);
     filename_str = zend_string_init(filename, strlen(filename), 0);
